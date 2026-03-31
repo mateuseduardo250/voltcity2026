@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Volt City — Preview Redesign</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#060910; font-family:'Segoe UI',sans-serif; color:#e6edf3; padding:24px; }
+
+h1 { text-align:center; font-size:14px; color:#7d8590; margin-bottom:32px; letter-spacing:2px; text-transform:uppercase; }
+
+.compare { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1400px; margin:0 auto; }
+.label { font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px; text-align:center; }
+.label.bad { color:#f04040; }
+.label.good { color:#39d353; }
+
+/* ===== ANTES ===== */
+.before { border:1px solid #30363d; border-radius:16px; padding:20px; background:#0d1117; }
+.before-buttons { display:flex; flex-wrap:wrap; gap:8px; }
+.before-buttons button {
+  padding:10px 14px; border-radius:10px; font-size:12px; font-weight:600;
+  border:1px solid #30363d; background:#161b22; color:#e6edf3; cursor:default;
+}
+.before-buttons button.white-btn { background:#e8e8e8; color:#222; border-color:#bbb; }
+
+/* ===== DEPOIS ===== */
+.after { border:1px solid #a050f0; border-radius:16px; padding:20px; background:#0d1117;
+  box-shadow:0 0 40px rgba(160,80,240,.12); }
+
+/* Navbar */
+.navbar { display:flex; align-items:center; justify-content:space-between;
+  background:#0d1117; border:1px solid #1e2530; border-radius:12px;
+  padding:10px 16px; margin-bottom:16px; }
+.brand { display:flex; align-items:center; gap:8px; font-weight:700; font-size:16px;
+  background:linear-gradient(90deg,#a050f0,#4090f0); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-pills { display:flex; gap:4px; }
+.nav-pill { padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600;
+  border:none; background:transparent; color:#7d8590; cursor:default; }
+.nav-pill.active { background:linear-gradient(135deg,#a050f0,#6030c0); color:#fff; }
+
+/* Energy */
+.energy-card { background:linear-gradient(135deg,#0f0a1e,#1a0f2e);
+  border:1px solid #2d1b4e; border-radius:14px; padding:20px; margin-bottom:14px;
+  text-align:center; }
+.energy-pct { font-size:52px; font-weight:800; line-height:1;
+  background:linear-gradient(135deg,#39d353,#00e5ff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.energy-bar-wrap { background:#1e2530; border-radius:10px; height:10px; overflow:hidden; margin:14px 0 8px; }
+.energy-bar-fill { height:100%; border-radius:10px; width:91%;
+  background:linear-gradient(90deg,#a050f0 0%,#4090f0 40%,#39d353 70%,#00e5ff 100%);
+  box-shadow:0 0 12px rgba(57,211,83,.4); }
+.energy-labels { display:flex; justify-content:space-between; font-size:11px; color:#4d5662; }
+
+/* Button groups */
+.btn-group { margin-bottom:12px; }
+.btn-group-label { font-size:10px; font-weight:700; letter-spacing:1.5px;
+  text-transform:uppercase; color:#4d5662; margin-bottom:8px;
+  display:flex; align-items:center; gap:6px; }
+.btn-group-label::after { content:''; flex:1; height:1px; background:#1e2530; }
+.btn-row { display:flex; gap:6px; flex-wrap:wrap; }
+
+/* Buttons new style */
+.btn-new {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px; padding:10px 12px; border-radius:10px; font-size:11px; font-weight:600;
+  border:1px solid #1e2530; background:#161b22; color:#e6edf3; cursor:default;
+  min-width:72px; transition:.2s;
+}
+.btn-new .ico { font-size:16px; }
+.btn-new.green  { border-color:#39d35340; }
+.btn-new.blue   { border-color:#4090f040; }
+.btn-new.purple { border-color:#a050f040; }
+.btn-new.white  { border-color:#ffffff30; }
+.btn-new.cyan   { border-color:#00e5ff40; }
+.btn-new.red    { border-color:#f0404040; }
+.btn-new.yellow { border-color:#f0c04040; }
+.btn-new.off    { border-color:#30363d; }
+.btn-new.mode   { border-color:#4090f030; color:#4090f0; }
+.btn-new.mode-p { border-color:#a050f030; color:#a050f0; }
+.btn-new.danger { border-color:#f0404030; color:#f04040; }
+.btn-new.energy-plus  { border-color:#39d35330; color:#39d353; }
+.btn-new.energy-minus { border-color:#f0404030; color:#f04040; }
+.btn-new.energy-fix   { border-color:#f0c04030; color:#f0c040; }
+.btn-new.energy-unf   { border-color:#00e5ff30; color:#00e5ff; }
+
+/* color dot */
+.cdot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+/* Stats */
+.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px; }
+.stat { background:#161b22; border:1px solid #1e2530; border-radius:12px;
+  padding:14px; text-align:center; }
+.stat-v { font-size:22px; font-weight:800; }
+.stat-v.green { color:#39d353; }
+.stat-v.red   { color:#f04040; }
+.stat-v.gold  { color:#f0c040; }
+.stat-v.purple { color:#a050f0; }
+.stat-l { font-size:11px; color:#4d5662; margin-top:3px; }
+
+/* Poles */
+.poles-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.pole-card { background:#161b22; border:1px solid #1e2530; border-radius:12px;
+  padding:12px; text-align:center; }
+.pole-light { width:32px; height:70px; border-radius:6px; margin:0 auto 8px;
+  background:#39d353; box-shadow:0 0 16px rgba(57,211,83,.5); }
+.pole-name { font-size:12px; font-weight:600; }
+.pole-status { font-size:10px; color:#4d5662; margin-top:2px; }
+.pole-card.online { border-color:#39d35330; }
+</style>
+</head>
+<body>
+
+<h1>⚡ Volt City — Comparação Visual</h1>
+
+<div class="compare">
+
+  <!-- ANTES -->
+  <div>
+    <div class="label bad">❌ Atual</div>
+    <div class="before">
+      <div style="font-size:11px;color:#4d5662;margin-bottom:10px;">Botões sem organização, estilos inconsistentes</div>
+      <div class="before-buttons">
+        <button>⬆ +5% Energia</button>
+        <button>⬇ -5% Energia</button>
+        <button>🔋 Fixar 100%</button>
+        <button>❄️ Descongelar</button>
+        <button>🔴 Block Vermelho</button>
+        <button>🎛️ Modo Manual</button>
+        <button>⚡ Modo Energia</button>
+        <button>🎆 Modo Show</button>
+        <button>🟢 Todos Verdes</button>
+        <button>🔵 Todos Azuis</button>
+        <button>🟣 Todos Roxos</button>
+        <button class="white-btn">⚪ Todos Branco</button>
+        <button style="background:linear-gradient(135deg,#00e5ff,#00b2cc)">🩵 Todos Ciano</button>
+        <button style="background:linear-gradient(135deg,#f04040,#c02020)">🔴 Todos Vermelhos</button>
+        <button style="background:linear-gradient(135deg,#f0c040,#c09020)">🟡 Todos Amarelos</button>
+        <button>⬛ Apagar Todos</button>
+        <button>🎉 Modo Festa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEPOIS -->
+  <div>
+    <div class="label good">✅ Redesign</div>
+    <div class="after">
+
+      <!-- Navbar -->
+      <div class="navbar">
+        <div class="brand">⚡ Volt City</div>
+        <div class="nav-pills">
+          <div class="nav-pill active">Dashboard</div>
+          <div class="nav-pill">Postes</div>
+          <div class="nav-pill">Show de Luz</div>
+          <div class="nav-pill">🎵 Parada</div>
+        </div>
+        <div style="font-size:12px;color:#4d5662;">👤 jotaadm</div>
+      </div>
+
+      <!-- Energia -->
+      <div class="energy-card">
+        <div class="energy-pct">91%</div>
+        <div class="energy-bar-wrap"><div class="energy-bar-fill"></div></div>
+        <div class="energy-labels">
+          <span>0% — Crítico</span><span>30% — Baixo</span>
+          <span>60% — Médio</span><span>100% — Máximo ⚡</span>
+        </div>
+      </div>
+
+      <!-- Grupo: Energia -->
+      <div class="btn-group">
+        <div class="btn-group-label">⚡ Energia</div>
+        <div class="btn-row">
+          <div class="btn-new energy-plus"><span class="ico">⬆</span>+5%</div>
+          <div class="btn-new energy-minus"><span class="ico">⬇</span>-5%</div>
+          <div class="btn-new energy-fix"><span class="ico">🔋</span>Fixar 100%</div>
+          <div class="btn-new energy-unf"><span class="ico">❄️</span>Descongelar</div>
+        </div>
+      </div>
+
+      <!-- Grupo: Cores -->
+      <div class="btn-group">
+        <div class="btn-group-label">🎨 Cores</div>
+        <div class="btn-row">
+          <div class="btn-new green"><div class="cdot" style="background:#39d353"></div>Verde</div>
+          <div class="btn-new blue"><div class="cdot" style="background:#4090f0"></div>Azul</div>
+          <div class="btn-new purple"><div class="cdot" style="background:#a050f0"></div>Roxo</div>
+          <div class="btn-new white"><div class="cdot" style="background:#fff"></div>Branco</div>
+          <div class="btn-new cyan"><div class="cdot" style="background:#00e5ff"></div>Ciano</div>
+          <div class="btn-new red"><div class="cdot" style="background:#f04040"></div>Vermelho</div>
+          <div class="btn-new yellow"><div class="cdot" style="background:#f0c040"></div>Amarelo</div>
+          <div class="btn-new off"><div class="cdot" style="background:#333"></div>Apagar</div>
+        </div>
+      </div>
+
+      <!-- Grupo: Modos -->
+      <div class="btn-group">
+        <div class="btn-group-label">🎛 Modos & Ações</div>
+        <div class="btn-row">
+          <div class="btn-new mode"><span class="ico">🎛️</span>Manual</div>
+          <div class="btn-new mode"><span class="ico">⚡</span>Energia</div>
+          <div class="btn-new mode-p"><span class="ico">🎆</span>Show</div>
+          <div class="btn-new mode-p"><span class="ico">🎉</span>Festa</div>
+          <div class="btn-new danger"><span class="ico">🔴</span>Block Red</div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat"><div class="stat-v green">4</div><div class="stat-l">Online</div></div>
+        <div class="stat"><div class="stat-v red">0</div><div class="stat-l">Offline</div></div>
+        <div class="stat"><div class="stat-v gold">91%</div><div class="stat-l">Energia</div></div>
+        <div class="stat"><div class="stat-v purple">Energia</div><div class="stat-l">Modo</div></div>
+      </div>
+
+      <!-- Poles -->
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#4d5662;margin-bottom:8px;">🗼 Postes</div>
+      <div class="poles-row">
+        <div class="pole-card online"><div class="pole-light"></div><div class="pole-name">Poste 1</div><div class="pole-status">● Online · 100%</div></div>
+        <div class="pole-card online"><div class="pole-light"></div><div class="pole-name">Poste 2</div><div class="pole-status">● Online · 100%</div></div>
+        <div class="pole-card online"><div class="pole-light"></div><div class="pole-name">Poste 3</div><div class="pole-status">● Online · 100%</div></div>
+        <div class="pole-card online"><div class="pole-light"></div><div class="pole-name">Poste 4</div><div class="pole-status">● Online · 100%</div></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div style="text-align:center;margin-top:28px;font-size:13px;color:#4d5662;">
+  Gostou do redesign? Me diga e aplico no app completo 🚀
+</div>
+
+</body>
+</html>

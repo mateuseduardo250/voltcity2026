@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volt City</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="city-icon">🏙️</div>
+      <h1>Volt City</h1>
+      <p>Sistema de controle de iluminação RGB</p>
+    </div>
+    <div class="form-group">
+      <label>Usuário</label>
+      <input type="text" id="login-user" placeholder="Usuário" value="" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="Senha" value="" autocomplete="off">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Entrar no Sistema</button>
+    <p class="login-hint">Acesso restrito ao operador autorizado.</p>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <span>🏙️</span>
+      <h1>Volt City</h1>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-tab" onclick="showPage('postes')">Postes</button>
+      <button class="nav-tab" onclick="showPage('show')">Show de Luz</button>
+      <button class="nav-tab" onclick="showPage('musica')">🎵 Parada Musical</button>
+      <button class="nav-tab" onclick="showPage('regras')">Regras</button>
+      <button class="nav-tab" onclick="showPage('historico')">Histórico</button>
+    </div>
+    <div class="navbar-right">
+      <span class="user-badge" id="user-badge">👤 admin</span>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </nav>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div id="alerts-area"></div>
+
+      <div class="energy-card">
+        <div class="energy-header">
+          <h2>⚡ Energia da Cidade</h2>
+          <span class="mode-badge" id="mode-badge">ENERGIA</span>
+        </div>
+        <div class="energy-value" id="energy-display">75%</div>
+        <div class="energy-bar-wrap">
+          <div class="energy-bar" id="energy-bar" style="width:75%"></div>
+        </div>
+        <div class="energy-labels">
+          <span>0% — Crítico</span>
+          <span>30% — Baixo</span>
+          <span>60% — Médio</span>
+          <span>100% — Máximo ⚡</span>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="qa-btn success" onclick="addEnergy(5)">
+          <span class="qa-icon">⬆️</span>+5% Energia
+        </button>
+        <button class="qa-btn danger" onclick="addEnergy(-5)">
+          <span class="qa-icon">⬇️</span>-5% Energia
+        </button>
+        <button class="qa-btn success" id="btn-fix100" onclick="toggleFix100()">
+          <span class="qa-icon">🔋</span>Fixar 100%
+        </button>
+        <button class="qa-btn warning" id="btn-freeze" onclick="toggleFreeze()">
+          <span class="qa-icon">❄️</span>Congelar
+        </button>
+        <button class="qa-btn danger" id="btn-block-red" onclick="toggleBlockRed()">
+          <span class="qa-icon">🔴</span>Block Vermelho
+        </button>
+        <button class="qa-btn info" onclick="setMode('manual'); showToast('Modo Manual ativado')">
+          <span class="qa-icon">🎛️</span>Modo Manual
+        </button>
+        <button class="qa-btn info" onclick="setMode('energia'); showToast('Modo Energia ativado')">
+          <span class="qa-icon">⚡</span>Modo Energia
+        </button>
+        <button class="qa-btn purple" onclick="showPage('show'); showToast('Abrindo Show de Luz...')">
+          <span class="qa-icon">🎆</span>Modo Show
+        </button>
+        <button class="qa-btn success" onclick="allPolesColor('#39d353')">
+          <span class="qa-icon">🟢</span>Todos Verdes
+        </button>
+        <button class="qa-btn info" onclick="allPolesColor('#4090f0')">
+          <span class="qa-icon">🔵</span>Todos Azuis
+        </button>
+        <button class="qa-btn purple" onclick="allPolesColor('#c060f0')">
+          <span class="qa-icon">🟣</span>Todos Roxos
+        </button>
+        <button class="qa-btn" style="background:linear-gradient(135deg,#e8e8e8,#bbb);color:#222" onclick="allPolesColor('#ffffff')">
+          <span class="qa-icon">⚪</span>Todos Branco
+        </button>
+        <button class="qa-btn" style="background:linear-gradient(135deg,#00e5ff,#00b2cc)" onclick="allPolesColor('#00e5ff')">
+          <span class="qa-icon">🩵</span>Todos Ciano
+        </button>
+        <button class="qa-btn danger" onclick="allPolesColor('#f04040')">
+          <span class="qa-icon">🔴</span>Todos Vermelhos
+        </button>
+        <button class="qa-btn" style="background:linear-gradient(135deg,#f0c040,#c09020)" onclick="allPolesColor('#f0c040')">
+          <span class="qa-icon">🟡</span>Todos Amarelos
+        </button>
+        <button class="qa-btn" onclick="toggleAllPoles(false)">
+          <span class="qa-icon">⬛</span>Apagar Todos
+        </button>
+        <button class="qa-btn purple" onclick="activateEffect('festa')">
+          <span class="qa-icon">🎉</span>Modo Festa
+        </button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card online">
+          <div class="stat-val" id="stat-online">4</div>
+          <div class="stat-label">Postes Online</div>
+        </div>
+        <div class="stat-card offline">
+          <div class="stat-val" id="stat-offline">0</div>
+          <div class="stat-label">Postes Offline</div>
+        </div>
+        <div class="stat-card energy">
+          <div class="stat-val" id="stat-energy">75%</div>
+          <div class="stat-label">Energia Atual</div>
+        </div>
+        <div class="stat-card mode">
+          <div class="stat-val" id="stat-mode">Energia</div>
+          <div class="stat-label">Modo Ativo</div>
+        </div>
+      </div>
+
+      <p class="section-title">🗼 Postes (Resumo)</p>
+      <div class="poles-grid" id="poles-mini"></div>
+    </div>
+
+    <!-- POSTES -->
+    <div class="page" id="page-postes">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="ctrl-btn" onclick="showPage('dashboard')" style="padding:10px 18px;font-size:13px">← Voltar ao Dashboard</button>
+        <button class="ctrl-btn" onclick="showPage('show')" style="padding:10px 18px;font-size:13px">🎆 Ir para Show de Luz</button>
+      </div>
+      <div class="batch-bar" id="batch-bar">
+        <span id="batch-label">0 postes selecionados</span>
+        <button class="ctrl-btn green" onclick="batchColor('#39d353')">🟢 Verde</button>
+        <button class="ctrl-btn" onclick="batchColor('#4090f0')">🔵 Azul</button>
+        <button class="ctrl-btn" onclick="batchColor('#f04040')">🔴 Vermelho</button>
+        <button class="ctrl-btn" onclick="batchColor('#c060f0')">🟣 Roxo</button>
+        <button class="ctrl-btn" onclick="batchColor('#ffffff')">⚪ Branco</button>
+        <button class="ctrl-btn red" onclick="clearSelection()">✕ Limpar</button>
+      </div>
+      <p class="section-title">🗼 Controle Individual de Postes
+        <button class="ctrl-btn" style="font-size:11px;margin-left:8px" onclick="selectAll()">Selecionar Todos</button>
+      </p>
+      <div class="poles-grid" id="poles-detail"></div>
+      <div class="pole-controls" id="pole-panel">
+        <div class="ctrl-grid" id="pole-ctrl-content"></div>
+      </div>
+    </div>
+
+    <!-- SHOW -->
+    <div class="page" id="page-show">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="ctrl-btn" onclick="showPage('dashboard')" style="padding:10px 18px;font-size:13px">← Voltar ao Dashboard</button>
+        <button class="ctrl-btn" onclick="showPage('postes')" style="padding:10px 18px;font-size:13px">🗼 Ir para Postes</button>
+      </div>
+      <p class="section-title">🎆 Show de Luz / Efeitos Visuais</p>
+      <div class="effects-grid">
+        <div class="effect-card" id="eff-arcoiris" onclick="activateEffect('arcoiris')">
+          <div class="effect-icon">🌈</div>
+          <div class="effect-name">Arco-Íris</div>
+          <div class="effect-desc">Ciclo de cores RGB contínuo</div>
+        </div>
+        <div class="effect-card" id="eff-onda" onclick="activateEffect('onda')">
+          <div class="effect-icon">🌊</div>
+          <div class="effect-name">Onda de Energia</div>
+          <div class="effect-desc">Cor percorre os postes em sequência</div>
+        </div>
+        <div class="effect-card" id="eff-pulsacao" onclick="activateEffect('pulsacao')">
+          <div class="effect-icon">💓</div>
+          <div class="effect-name">Pulsação</div>
+          <div class="effect-desc">Todos pulsam juntos em ritmo</div>
+        </div>
+        <div class="effect-card" id="eff-alternancia" onclick="activateEffect('alternancia')">
+          <div class="effect-icon">🔀</div>
+          <div class="effect-name">Alternância</div>
+          <div class="effect-desc">Grupos alternam entre duas cores</div>
+        </div>
+        <div class="effect-card" id="eff-perseguicao" onclick="activateEffect('perseguicao')">
+          <div class="effect-icon">💫</div>
+          <div class="effect-name">Perseguição</div>
+          <div class="effect-desc">Luz "corre" de poste em poste</div>
+        </div>
+        <div class="effect-card" id="eff-contagem" onclick="activateEffect('contagem')">
+          <div class="effect-icon">⏳</div>
+          <div class="effect-name">Contagem Crítica</div>
+          <div class="effect-desc">Verde → Amarelo → Vermelho</div>
+        </div>
+        <div class="effect-card" id="eff-festa" onclick="activateEffect('festa')">
+          <div class="effect-icon">🎉</div>
+          <div class="effect-name">Festa da Cidade</div>
+          <div class="effect-desc">Explosão colorida celebração!</div>
+        </div>
+        <div class="effect-card" id="eff-noturno" onclick="activateEffect('noturno')">
+          <div class="effect-icon">🌙</div>
+          <div class="effect-name">Modo Noturno</div>
+          <div class="effect-desc">Azul suave e sereno</div>
+        </div>
+        <div class="effect-card" id="eff-manutencao" onclick="activateEffect('manutencao')">
+          <div class="effect-icon">🔧</div>
+          <div class="effect-name">Manutenção</div>
+          <div class="effect-desc">Amarelo piscante de aviso</div>
+        </div>
+        <div class="effect-card" id="eff-carga" onclick="activateEffect('carga')">
+          <div class="effect-icon">⚡</div>
+          <div class="effect-name">Carga</div>
+          <div class="effect-desc">Barras sobem e trocam de cor</div>
+        </div>
+      </div>
+
+      <!-- MODO MUSICAL BPM -->
+      <div style="margin-top:24px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px;">
+        <p class="section-title">🎵 Modo Musical — BPM</p>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">Digite o BPM da música tocando e os postes piscam no ritmo exato.</p>
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:14px;">
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <label style="font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px;">BPM</label>
+            <input id="bpm-input" type="number" min="40" max="200" value="120"
+              style="width:90px; padding:10px; border-radius:8px; border:1px solid var(--border);
+                     background:var(--bg); color:var(--text); font-size:20px; font-weight:700; text-align:center;">
+          </div>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <label style="font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px;">Estilo</label>
+            <select id="bpm-style"
+              style="padding:10px 14px; border-radius:8px; border:1px solid var(--border);
+                     background:var(--bg); color:var(--text); font-size:14px;">
+              <option value="flash">Flash (pisca todos)</option>
+              <option value="sequencia">Sequência (um por um)</option>
+              <option value="alternado">Alternado (par/ímpar)</option>
+              <option value="arcoiris">Arco-íris</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px; align-items:flex-end; padding-bottom:2px;">
+            <button class="ctrl-btn green" id="btn-bpm-start" onclick="startBPM()">▶ Iniciar</button>
+            <button class="ctrl-btn red"  id="btn-bpm-stop"  onclick="stopBPM()" style="display:none">⏹ Parar</button>
+          </div>
+        </div>
+        <!-- TAP BPM -->
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <button onclick="tapBPM()"
+            style="padding:12px 24px; border-radius:10px; border:2px solid var(--purple);
+                   background:transparent; color:var(--purple); font-size:15px; font-weight:700;
+                   cursor:pointer; transition:.1s; user-select:none;"
+            onmousedown="this.style.transform='scale(.95)'" onmouseup="this.style.transform=''">
+            👆 TAP BPM
+          </button>
+          <span id="bpm-tap-hint" style="font-size:12px; color:var(--muted);">Bata no ritmo da música para detectar o BPM automaticamente</span>
+        </div>
+        <!-- indicador de pulso -->
+        <div id="bpm-pulse-bar" style="margin-top:14px; height:6px; border-radius:3px;
+             background:var(--border); overflow:hidden; display:none;">
+          <div id="bpm-pulse-fill" style="height:100%; width:0%; background:var(--purple);
+               transition:width .05s linear;"></div>
+        </div>
+        <p id="bpm-status" style="margin-top:8px; font-size:12px; color:var(--muted);">⏸ Parado</p>
+      </div>
+
+      <div style="margin-top:24px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px;">
+        <p class="section-title">⏹️ Controle do Efeito</p>
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+          <button class="ctrl-btn red" onclick="stopEffect()">⏹️ Parar Efeito</button>
+          <button class="ctrl-btn green" onclick="setMode('energia')">🔄 Voltar ao Normal</button>
+          <span style="font-size:13px; color:var(--muted)">Efeito ativo: <b id="active-effect-label" style="color:var(--purple)">nenhum</b></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PARADA MUSICAL -->
+    <div class="page" id="page-musica">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="ctrl-btn" onclick="showPage('dashboard')" style="padding:10px 18px;font-size:13px">← Dashboard</button>
+      </div>
+
+      <!-- PLAYER ATUAL -->
+      <div id="music-player-bar" style="background:linear-gradient(135deg,#1a0a2e,#2d1b4e);border:1px solid var(--purple);border-radius:16px;padding:20px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div id="music-album-art" style="width:64px;height:64px;border-radius:12px;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">🎵</div>
+          <div style="flex:1;min-width:0;">
+            <div id="music-now-title" style="font-size:18px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Nenhuma música selecionada</div>
+            <div id="music-now-bpm" style="font-size:13px;color:var(--purple);margin-top:2px;">— BPM</div>
+            <div style="margin-top:8px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;">
+              <div id="music-progress-bar" style="height:100%;width:0%;background:var(--purple);transition:width .5s linear;border-radius:2px;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;">
+              <span id="music-time-cur">0:00</span><span id="music-time-total">0:00</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+            <button onclick="musicPrev()" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-size:18px;cursor:pointer;">⏮</button>
+            <button id="btn-play-pause" onclick="togglePlayPause()" style="width:52px;height:52px;border-radius:50%;border:none;background:var(--purple);color:#fff;font-size:22px;cursor:pointer;">▶</button>
+            <button onclick="musicNext()" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-size:18px;cursor:pointer;">⏭</button>
+            <button onclick="musicStop()" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-size:18px;cursor:pointer;">⏹</button>
+          </div>
+        </div>
+        <!-- pulso BPM visual -->
+        <div id="music-bpm-pulse" style="margin-top:12px;display:flex;gap:6px;align-items:flex-end;height:28px;">
+          <div class="bpm-bar" style="background:var(--purple);border-radius:2px;width:6px;"></div>
+          <div class="bpm-bar" style="background:var(--purple);border-radius:2px;width:6px;"></div>
+          <div class="bpm-bar" style="background:var(--purple);border-radius:2px;width:6px;"></div>
+          <div class="bpm-bar" style="background:var(--purple);border-radius:2px;width:6px;"></div>
+          <span id="music-bpm-live" style="font-size:12px;color:rgba(255,255,255,.5);margin-left:6px;">parado</span>
+        </div>
+      </div>
+
+      <!-- CARREGAR ARQUIVOS -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+        <p class="section-title" style="margin:0;">🎶 Playlist</p>
+        <div style="display:flex;gap:8px;">
+          <label style="padding:8px 16px;border-radius:8px;border:1px solid var(--purple);color:var(--purple);font-size:13px;font-weight:600;cursor:pointer;">
+            + Adicionar Músicas
+            <input id="music-file-input" type="file" accept="audio/*" multiple style="display:none" onchange="loadMusicFiles(this.files)">
+          </label>
+          <button onclick="clearPlaylist()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;cursor:pointer;">Limpar</button>
+        </div>
+      </div>
+
+      <!-- LISTA DE MÚSICAS -->
+      <div id="music-playlist" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="text-align:center;padding:40px;color:var(--muted);font-size:14px;">
+          Clique em <b>+ Adicionar Músicas</b> para carregar seus arquivos de áudio.<br>
+          <span style="font-size:12px;opacity:.7;">Os nomes e BPMs ficam salvos automaticamente.</span>
+        </div>
+      </div>
+
+      <!-- MODAL EDITAR MÚSICA -->
+      <div id="music-edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:320px;max-width:90vw;">
+          <p style="font-weight:700;font-size:16px;margin-bottom:16px;">✏️ Editar Música</p>
+          <input type="hidden" id="edit-music-idx">
+          <div style="margin-bottom:12px;">
+            <label style="font-size:12px;color:var(--muted);">Nome da música</label>
+            <input id="edit-music-name" type="text" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);margin-top:4px;box-sizing:border-box;">
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:12px;color:var(--muted);">BPM</label>
+            <input id="edit-music-bpm" type="number" min="40" max="250" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);margin-top:4px;box-sizing:border-box;">
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="font-size:12px;color:var(--muted);">Estilo dos postes</label>
+            <select id="edit-music-style" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);margin-top:4px;box-sizing:border-box;">
+              <option value="flash">Flash (todos juntos)</option>
+              <option value="sequencia">Sequência (um por um)</option>
+              <option value="alternado">Alternado (par/ímpar)</option>
+              <option value="arcoiris">Arco-íris</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="saveEditMusic()" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--purple);color:#fff;font-weight:700;cursor:pointer;">Salvar</button>
+            <button onclick="closeEditMusic()" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REGRAS -->
+    <div class="page" id="page-regras">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="ctrl-btn" onclick="showPage('dashboard')" style="padding:10px 18px;font-size:13px">← Voltar ao Dashboard</button>
+      </div>
+      <p class="section-title">⚙️ Regras de Energia e Configurações</p>
+      <div class="settings-grid">
+        <div class="settings-card">
+          <h3>Mapa de Cores por Faixa</h3>
+          <div class="color-range">
+            <div class="range-label">0% – 10%</div>
+            <div class="range-dot" style="background:#f04040"></div>
+            <div class="range-desc" style="color:#f04040">Vermelho — Crítico</div>
+          </div>
+          <div class="color-range">
+            <div class="range-label">11% – 30%</div>
+            <div class="range-dot" style="background:#f08040"></div>
+            <div class="range-desc" style="color:#f08040">Laranja — Baixo</div>
+          </div>
+          <div class="color-range">
+            <div class="range-label">31% – 60%</div>
+            <div class="range-dot" style="background:#f0c040"></div>
+            <div class="range-desc" style="color:#f0c040">Amarelo — Médio</div>
+          </div>
+          <div class="color-range">
+            <div class="range-label">61% – 100%</div>
+            <div class="range-dot" style="background:#39d353"></div>
+            <div class="range-desc" style="color:#39d353">Verde — Ótimo</div>
+          </div>
+          <div class="color-range">
+            <div class="range-label">100% 🎉</div>
+            <div class="range-dot anim-rainbow" style="background:#f04040"></div>
+            <div class="range-desc" style="color:var(--purple)">Celebração!</div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Comportamento Automático</h3>
+          <div class="setting-row">
+            <span class="setting-name">Queda automática de energia</span>
+            <button class="toggle on" id="tog-queda" onclick="toggleSetting(this, 'queda')"></button>
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Queda por minuto (%)</span>
+            <input type="number" class="number-input" id="queda-rate" value="1" min="0" max="10">
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Energia mínima (%)</span>
+            <input type="number" class="number-input" id="min-energy" value="5" min="0" max="50">
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Energia ao ligar (%)</span>
+            <input type="number" class="number-input" id="start-energy" value="75" min="0" max="100">
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Segurança e Proteção</h3>
+          <div class="setting-row">
+            <span class="setting-name">Bloquear cor vermelha</span>
+            <button class="toggle on" id="tog-red" onclick="toggleBlockRed()"></button>
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Cor de segurança (quando bloqueado)</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:16px;height:16px;border-radius:50%;background:#39d353"></div>
+              <span style="font-size:12px;color:var(--muted)">Verde</span>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Operador sempre pode controlar</span>
+            <button class="toggle on" onclick="showToast('Sempre ativo por segurança')"></button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Ganho de Energia por Evento</h3>
+          <div class="setting-row">
+            <span class="setting-name">Ganho por botão físico (%)</span>
+            <input type="number" class="number-input" value="5" min="1" max="20">
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Ganho por sensor (%)</span>
+            <input type="number" class="number-input" value="3" min="1" max="20">
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Cooldown anti-repetição (s)</span>
+            <input type="number" class="number-input" value="30" min="1" max="300">
+          </div>
+          <div style="margin-top:12px">
+            <button class="ctrl-btn green" onclick="showToast('✅ Configurações salvas!')">💾 Salvar Configurações</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <div class="page" id="page-historico">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="ctrl-btn" onclick="showPage('dashboard')" style="padding:10px 18px;font-size:13px">← Voltar ao Dashboard</button>
+      </div>
+      <p class="section-title">📋 Histórico de Eventos</p>
+      <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>Data/Hora</th>
+              <th>Operador</th>
+              <th>Ação</th>
+              <th>Detalhes</th>
+              <th>Energia</th>
+            </tr>
+          </thead>
+          <tbody id="log-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<script src="js/state.js"></script>
+<script>const state = window.state;</script>
+<script src="js/toast.js"></script>
+<script src="js/logs.js"></script>
+<script src="js/hardware.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/energy.js"></script>
+<script src="js/poles.js"></script>
+<script src="js/effects.js"></script>
+<script src="js/bpm.js"></script>
+<script src="js/music.js"></script>
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         

@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volt City</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --green: #39d353;
+    --yellow: #f0c040;
+    --orange: #f08040;
+    --red: #f04040;
+    --blue: #4090f0;
+    --purple: #c060f0;
+    --white: #ffffff;
+    --accent: #238636;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  /* LOGIN */
+  #login-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; flex-direction: column; gap: 24px;
+  }
+  .login-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 40px; width: 360px;
+  }
+  .login-logo { text-align: center; margin-bottom: 32px; }
+  .login-logo .city-icon { font-size: 56px; }
+  .login-logo h1 { font-size: 22px; font-weight: 700; color: var(--green); margin-top: 8px; }
+  .login-logo p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .form-group input {
+    width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 14px; outline: none; transition: border-color .2s;
+  }
+  .form-group input:focus { border-color: var(--green); }
+  .btn-login {
+    width: 100%; padding: 12px; background: var(--accent); color: white; border: none;
+    border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px;
+    transition: background .2s;
+  }
+  .btn-login:hover { background: #2ea043; }
+  .login-hint { color: var(--muted); font-size: 12px; text-align: center; margin-top: 16px; }
+
+  /* MAIN APP */
+  #app { display: none; }
+
+  /* NAVBAR */
+  .navbar {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .navbar-brand { display: flex; align-items: center; gap: 10px; }
+  .navbar-brand span { font-size: 20px; }
+  .navbar-brand h1 { font-size: 16px; font-weight: 700; color: var(--green); }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab {
+    padding: 7px 16px; border-radius: 8px; border: none; background: transparent;
+    color: var(--muted); font-size: 13px; cursor: pointer; transition: all .2s;
+  }
+  .nav-tab:hover { background: rgba(255,255,255,.05); color: var(--text); }
+  .nav-tab.active { background: rgba(57,211,83,.15); color: var(--green); }
+  .navbar-right { display: flex; align-items: center; gap: 12px; }
+  .user-badge {
+    background: rgba(255,255,255,.07); border-radius: 20px; padding: 5px 12px;
+    font-size: 12px; color: var(--muted);
+  }
+  .btn-logout {
+    padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
+  }
+  .btn-logout:hover { color: var(--red); border-color: var(--red); }
+
+  /* CONTENT */
+  .content { padding: 24px; max-width: 1400px; margin: 0 auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ENERGY BAR */
+  .energy-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 24px; margin-bottom: 20px;
+  }
+  .energy-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .energy-header h2 { font-size: 16px; font-weight: 600; }
+  .mode-badge {
+    padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    background: rgba(57,211,83,.15); color: var(--green); border: 1px solid rgba(57,211,83,.3);
+  }
+  .energy-value { font-size: 64px; font-weight: 800; text-align: center; margin: 8px 0; transition: color .5s; }
+  .energy-bar-wrap {
+    background: rgba(255,255,255,.07); border-radius: 100px; height: 20px;
+    overflow: hidden; margin: 12px 0;
+  }
+  .energy-bar {
+    height: 100%; border-radius: 100px;
+    transition: width .6s ease, background .6s ease;
+    position: relative; overflow: hidden;
+  }
+  .energy-bar::after {
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+    animation: shine 2s infinite;
+  }
+  @keyframes shine { to { left: 100%; } }
+  .energy-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+
+  /* QUICK ACTIONS */
+  .quick-actions {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;
+    margin-bottom: 20px;
+  }
+  .qa-btn {
+    padding: 12px 8px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all .2s; text-align: center;
+  }
+  .qa-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+  .qa-btn .qa-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+  .qa-btn.danger { border-color: rgba(240,64,64,.4); color: var(--red); }
+  .qa-btn.danger:hover { background: rgba(240,64,64,.1); }
+  .qa-btn.success { border-color: rgba(57,211,83,.4); color: var(--green); }
+  .qa-btn.success:hover { background: rgba(57,211,83,.1); }
+  .qa-btn.warning { border-color: rgba(240,192,64,.4); color: var(--yellow); }
+  .qa-btn.warning:hover { background: rgba(240,192,64,.1); }
+  .qa-btn.info { border-color: rgba(64,144,240,.4); color: var(--blue); }
+  .qa-btn.info:hover { background: rgba(64,144,240,.1); }
+  .qa-btn.purple { border-color: rgba(192,96,240,.4); color: var(--purple); }
+  .qa-btn.purple:hover { background: rgba(192,96,240,.1); }
+  .qa-btn.active-btn { background: rgba(57,211,83,.2); border-color: var(--green); }
+
+  /* STATS ROW */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; text-align: center;
+  }
+  .stat-card .stat-val { font-size: 28px; font-weight: 700; }
+  .stat-card .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .stat-card.online .stat-val { color: var(--green); }
+  .stat-card.offline .stat-val { color: var(--red); }
+  .stat-card.energy .stat-val { color: var(--yellow); }
+  .stat-card.mode .stat-val { color: var(--blue); font-size: 14px; }
+
+  /* POLES GRID */
+  .section-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .poles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+  .pole-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; text-align: center; transition: all .2s; cursor: pointer; position: relative;
+  }
+  .pole-card:hover { border-color: #4040a0; transform: translateY(-2px); }
+  .pole-card.selected { border-color: var(--blue); background: rgba(64,144,240,.08); }
+  .pole-card.locked { border-color: var(--yellow); }
+  .pole-card.offline { opacity: .4; }
+  .pole-visual {
+    width: 40px; height: 80px; border-radius: 6px; margin: 0 auto 10px;
+    transition: background .4s; box-shadow: 0 0 20px rgba(0,0,0,.5);
+    position: relative;
+  }
+  .pole-visual.glow { box-shadow: 0 0 20px currentColor; }
+  .pole-name { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .pole-status { font-size: 10px; color: var(--muted); }
+  .pole-lock-icon {
+    position: absolute; top: 6px; right: 6px; font-size: 12px;
+    display: none;
+  }
+  .pole-card.locked .pole-lock-icon { display: block; }
+
+  /* POLE CONTROLS PANEL */
+  .pole-controls {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; margin-top: 16px; display: none;
+  }
+  .pole-controls.active { display: block; }
+  .ctrl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+  .ctrl-group { }
+  .ctrl-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .color-presets { display: flex; gap: 8px; flex-wrap: wrap; }
+  .color-dot {
+    width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; transition: all .2s;
+  }
+  .color-dot:hover { transform: scale(1.15); border-color: white; }
+  .color-dot.selected { border-color: white; transform: scale(1.1); }
+  input[type=color] {
+    width: 40px; height: 40px; border: 1px solid var(--border); border-radius: 8px;
+    cursor: pointer; background: none; padding: 2px;
+  }
+  input[type=range] { width: 100%; accent-color: var(--green); }
+  .ctrl-btn {
+    padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: 12px; cursor: pointer;
+    margin: 3px; transition: all .2s;
+  }
+  .ctrl-btn:hover { background: rgba(255,255,255,.08); }
+  .ctrl-btn.red:hover { background: rgba(240,64,64,.2); border-color: var(--red); }
+  .ctrl-btn.green:hover { background: rgba(57,211,83,.2); border-color: var(--green); }
+
+  /* BATCH ACTIONS */
+  .batch-bar {
+    background: rgba(64,144,240,.1); border: 1px solid rgba(64,144,240,.3); border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+    display: none;
+  }
+  .batch-bar.active { display: flex; }
+  .batch-bar span { font-size: 13px; color: var(--blue); flex: 1; }
+
+  /* SHOW MODE */
+  .effects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+  .effect-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; text-align: center; cursor: pointer; transition: all .2s;
+  }
+  .effect-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+  .effect-card.active { border-color: var(--purple); background: rgba(192,96,240,.08); }
+  .effect-icon { font-size: 36px; margin-bottom: 10px; }
+  .effect-name { font-size: 13px; font-weight: 600; }
+  .effect-desc { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ENERGY SETTINGS */
+  .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+  .settings-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+  }
+  .settings-card h3 { font-size: 14px; margin-bottom: 16px; color: var(--muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px; }
+  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-name { font-size: 13px; }
+  .toggle {
+    width: 40px; height: 22px; border-radius: 11px; background: var(--border);
+    cursor: pointer; position: relative; transition: background .2s; border: none;
+  }
+  .toggle::after {
+    content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%;
+    background: white; top: 3px; left: 3px; transition: left .2s;
+  }
+  .toggle.on { background: var(--green); }
+  .toggle.on::after { left: 21px; }
+  .number-input {
+    width: 70px; padding: 5px 8px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-size: 13px; text-align: center;
+  }
+
+  /* COLOR RANGE SETTINGS */
+  .color-range { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+  .range-label { font-size: 12px; width: 80px; color: var(--muted); }
+  .range-dot { width: 20px; height: 20px; border-radius: 50%; }
+  .range-desc { font-size: 12px; flex: 1; }
+
+  /* HISTORY */
+  .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .log-table th { text-align: left; padding: 10px 12px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border); }
+  .log-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.04); }
+  .log-table tr:hover td { background: rgba(255,255,255,.02); }
+  .log-action { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .log-action.cor { background: rgba(64,144,240,.15); color: var(--blue); }
+  .log-action.energia { background: rgba(57,211,83,.15); color: var(--green); }
+  .log-action.modo { background: rgba(192,96,240,.15); color: var(--purple); }
+  .log-action.trava { background: rgba(240,192,64,.15); color: var(--yellow); }
+
+  /* ALERTS */
+  .alert {
+    padding: 10px 16px; border-radius: 8px; margin-bottom: 12px;
+    font-size: 13px; display: flex; align-items: center; gap: 8px;
+  }
+  .alert.red { background: rgba(240,64,64,.1); border: 1px solid rgba(240,64,64,.3); color: #ff8080; }
+  .alert.green { background: rgba(57,211,83,.1); border: 1px solid rgba(57,211,83,.3); color: var(--green); }
+  .alert.yellow { background: rgba(240,192,64,.1); border: 1px solid rgba(240,192,64,.3); color: var(--yellow); }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px; background: #1f2937;
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px;
+    font-size: 13px; z-index: 999; opacity: 0; transition: opacity .3s;
+    pointer-events: none; max-width: 300px;
+  }
+  #toast.show { opacity: 1; }
+
+  /* ANIMATIONS */
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+  @keyframes rainbow {
+    0% { background: #f04040; } 14% { background: #f08040; } 28% { background: #f0c040; }
+    42% { background: #39d353; } 57% { background: #4090f0; } 71% { background: #4040f0; }
+    85% { background: #c060f0; } 100% { background: #f04040; }
+  }
+  @keyframes wave { 0% { opacity: 1; } 50% { opacity: .3; } 100% { opacity: 1; } }
+  @keyframes celebrate { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  .anim-rainbow { animation: rainbow 2s linear infinite; }
+  .anim-pulse { animation: pulse 1.5s ease-in-out infinite; }
+  .anim-celebrate { animation: celebrate 0.5s ease-in-out infinite; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .nav-tabs { display: none; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .quick-actions { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="city-icon">🏙️</div>
+      <h1>Volt City</h1>
+      <p>Sistema de controle de iluminação RGB</p>
+    </div>
+    <div class="form-group">
+      <label>Usuário</label>
+      <input type="text" id="login-user" placeholder="jotaadm" value="">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="••••••" value="1234">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Entrar no Sistema</button>
+    <p class="login-hint">Acesso restrito ao operador autorizado.</p>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <span>🏙️</span>
+      <h1>Volt City</h1>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-tab" onclick="showPage('postes')">Postes</button>
+      <button class="nav-tab" onclick="showPage('show')">Show de Luz</button>
+      <button class="nav-tab" onclick="showPage('regras')">Regras</button>
+      <button class="nav-tab" onclick="showPage('historico')">Histórico</button>
+    </div>
+    <div class="navbar-right">
+      <span class="user-badge" id="user-badge">👤 admin</span>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </nav>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div id="alerts-area"></div>
+
+      <div class="energy-card">
+        <div class="energy-header">
+          <h2>⚡ Energia da Cidade</h2>
+          <span class="mode-badge" id="mode-badge">ENERGIA</span>
+        </div>
+        <div class="energy-value" id="energy-display">75%</div>
+        <div class="energy-bar-wrap">
+          <div class="energy-bar" id="energy-bar" style="width:75%"></div>
+        </div>
+        <div class="energy-labels">
+          <span>0% — Crítico</span>
+          <span>30% — Baixo</span>
+          <span>60% — Médio</span>
+          <span>100% — Máximo ⚡</span>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="qa-btn success" onclick="addEnergy(5)">
+          <span class="qa-icon">⬆️</span>+5% Energia
+        </button>
+        <button class="qa-btn danger" onclick="addEnergy(-5)">
+          <span class="qa-icon">⬇️</span>-5% Energia
+        </button>
+        <button class="qa-btn success" id="btn-fix100" onclick="toggleFix100()">
+          <span class="qa-icon">🔋</span>Fixar 100%
+        </button>
+        <button class="qa-btn warning" id="btn-freeze" onclick="toggleFreeze()">
+          <span class="qa-icon">❄️</span>Congelar
+        </button>
+        <button class="qa-btn danger" id="btn-block-red" onclick="toggleBlockRed()">
+          <span class="qa-icon">🔴</span>Block Vermelho
+        </button>
+        <button class="qa-btn info" onclick="setMode('manual'); showToast('Modo Manual ativado')">
+          <span class="qa-icon">🎛️</span>Modo Manual
+        </button>
+        <button class="qa-btn info" onclick="setMode('energia'); showToast('Modo Energia ativado')">
+          <span class="qa-icon">⚡</span>Modo Energia
+        </button>
+        <button class="qa-btn purple" onclick="showPage('show'); showToast('Abrindo Show de Luz...')">
+          <span class="qa-icon">🎆</span>Modo Show
+        </button>
+        <button class="qa-btn success" onclick="allPolesColor('#39d353')">
+          <span class="qa-icon">🟢</span>Todos Verdes
+        </button>
+        <button class="qa-btn info" onclick="allPolesColor('#4090f0')">
+          <span class="qa-icon">🔵</span>Todos Azuis
+        </button>
+        <button class="qa-btn" onclick="toggleAllPoles(false)">
+          <span class="qa-icon">⬛</span>Apagar Todos
+        </button>
+        <button class="qa-btn purple" onclick="activateEffect('festa')">
+          <span class="qa-icon">🎉</span>Modo Festa
+        </button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card online">
+          <div class="stat-val" id="stat-online">4</div>
+          <div class="stat-label">Postes Online</div>
+        </div>
+        <div class="stat-card offline">
+          <div class="stat-val" id="stat-offline">0</div>
+          <div class="stat-label">Postes Offline</div>
+        </div>
+        <div class="stat-card energy">
+          <div class="stat-val" id="stat-energy">75%</div>
+          <div class="stat-label">Energia Atual</div>
+        </div>
+        <div class="stat-card mode">
+          <div class="stat-val" id="stat-mode">Energia</div>
+          <div class="stat-label">Modo Ativo</div>
+        </div>
+      </div>
+
+      <p class="section-title">🗼 Postes (Resumo)</p>
+      <div class="poles-grid" id="poles-mini"></div>
+    </div>
+
+    <!-- POSTES -->
+    <div class="page" id="page-postes">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="ctrl-btn" onclick="showPage('dashboard')" style="padding:10px 18px;font-size:13px">← Voltar ao Dashboard</button>
+        <button class="ctrl-btn" onclick="showPage('show')" style="padding:10px 18px;font-size:13px">🎆 Ir para Show de Luz</button>
+      </div>
+      <div class="batch-bar" id="batch-bar">
+        <span id="batch-label">0 postes selecionados</span>
+        <button class="ctrl-btn green" onclick="batchColor('#39d353')">🟢 Verde</button>
+        <button class="ctrl-btn" onclick="batchColor('#4090f0')">🔵 Azul</button>
+        <button class="ctrl-btn" onclick="batchColor('#f04040')">🔴 Vermelho</button>
+        <button class="ctrl-btn" onclick="batchColor('#c060f0')">🟣 Roxo</button>
+        <button class="ctrl-btn" onclick="batchColor('#ffffff')">⚪ Branco</button>
+        <button class="ctrl-btn red" onclick="clearSelection()">✕ Limpar</button>
+      </div>
+      <p class="section-title">🗼 Controle Individual de Postes
+        <button class="ctrl-btn" style="font-size:11px;margin-left:8px" onclick="selectAll()">Selecionar Todos</button>
+      </p>
+      <div class="poles-grid" id="poles-detail"></div>
+      <div class="pole-controls" id="pole-panel">
+        <div class="ctrl-grid" id="pole-ctrl-content"></div>
+      </div>
+    </div>
+
+    <!-- SHOW -->
+    <div class="page" id="page-show">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="ctrl-btn" onclick="showPage('dashboard')" style="padding:10px 18px;font-size:13px">← Voltar ao Dashboard</button>
+        <button class="ctrl-btn" onclick="showPage('postes')" style="padding:10px 18px;font-size:13px">🗼 Ir para Postes</button>
+      </div>
+      <p class="section-title">🎆 Show de Luz / Efeitos Visuais</p>
+      <div class="effects-grid">
+        <div class="effect-card" id="eff-arcoiris" onclick="activateEffect('arcoiris')">
+          <div class="effect-icon">🌈</div>
+          <div class="effect-name">Arco-Íris</div>
+          <div class="effect-desc">Ciclo de cores RGB contínuo</div>
+        </div>
+        <div class="effect-card" id="eff-onda" onclick="activateEffect('onda')">
+          <div class="effect-icon">🌊</div>
+          <div class="effect-name">Onda de Energia</div>
+          <div class="effect-desc">Cor percorre os postes em sequência</div>
+        </div>
+        <div class="effect-card" id="eff-pulsacao" onclick="activateEffect('pulsacao')">
+          <div class="effect-icon">💓</div>
+          <div class="effect-name">Pulsação</div>
+          <div class="effect-desc">Todos pulsam juntos em ritmo</div>
+        </div>
+        <div class="effect-card" id="eff-alternancia" onclick="activateEffect('alternancia')">
+          <div class="effect-icon">🔀</div>
+          <div class="effect-name">Alternância</div>
+          <div class="effect-desc">Grupos alternam entre duas cores</div>
+        </div>
+        <div class="effect-card" id="eff-perseguicao" onclick="activateEffect('perseguicao')">
+          <div class="effect-icon">💫</div>
+          <div class="effect-name">Perseguição</div>
+          <div class="effect-desc">Luz "corre" de poste em poste</div>
+        </div>
+        <div class="effect-card" id="eff-contagem" onclick="activateEffect('contagem')">
+          <div class="effect-icon">⏳</div>
+          <div class="effect-name">Contagem Crítica</div>
+          <div class="effect-desc">Verde → Amarelo → Vermelho</div>
+        </div>
+        <div class="effect-card" id="eff-festa" onclick="activateEffect('festa')">
+          <div class="effect-icon">🎉</div>
+          <div class="effect-name">Festa da Cidade</div>
+          <div class="effect-desc">Explosão colorida celebração!</div>
+        </div>
+        <div class="effect-card" id="eff-noturno" onclick="activateEffect('noturno')">
+          <div class="effect-icon">🌙</div>
+          <div class="effect-name">Modo Noturno</div>
+          <div class="effect-desc">Azul suave e sereno</div>
+        </div>
+        <div class="effect-card" id="eff-manutencao" onclick="activateEffect('manutencao')">
+          <div class="effect-icon">🔧</div>
+          <div class="effect-name">Manutenção</div>
+          <div class="effect-desc">Amarelo piscante de aviso</div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px;">
+        <p class="section-title">⏹️ Controle do Efeito</p>
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+          <button class="ctrl-btn red" onclick="stopEffect()">⏹️ Parar Efeito</button>
+          <button class="ctrl-btn green" onclick="setMode('energia')">🔄 Voltar ao Normal</button>
+          <span style="font-size:13px; color:var(--muted)">Efeito ativo: <b id="active-effect-label" style="color:var(--purple)">nenhum</b></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- REGRAS -->
+    <div class="page" id="page-regras">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="ctrl-btn" onclick="showPage('dashboard')" style="padding:10px 18px;font-size:13px">← Voltar ao Dashboard</button>
+      </div>
+      <p class="section-title">⚙️ Regras de Energia e Configurações</p>
+      <div class="settings-grid">
+        <div class="settings-card">
+          <h3>Mapa de Cores por Faixa</h3>
+          <div class="color-range">
+            <div class="range-label">0% – 10%</div>
+            <div class="range-dot" style="background:#f04040"></div>
+            <div class="range-desc" style="color:#f04040">Vermelho — Crítico</div>
+          </div>
+          <div class="color-range">
+            <div class="range-label">11% – 30%</div>
+            <div class="range-dot" style="background:#f08040"></div>
+            <div class="range-desc" style="color:#f08040">Laranja — Baixo</div>
+          </div>
+          <div class="color-range">
+            <div class="range-label">31% – 60%</div>
+            <div class="range-dot" style="background:#f0c040"></div>
+            <div class="range-desc" style="color:#f0c040">Amarelo — Médio</div>
+          </div>
+          <div class="color-range">
+            <div class="range-label">61% – 100%</div>
+            <div class="range-dot" style="background:#39d353"></div>
+            <div class="range-desc" style="color:#39d353">Verde — Ótimo</div>
+          </div>
+          <div class="color-range">
+            <div class="range-label">100% 🎉</div>
+            <div class="range-dot anim-rainbow" style="background:#f04040"></div>
+            <div class="range-desc" style="color:var(--purple)">Celebração!</div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Comportamento Automático</h3>
+          <div class="setting-row">
+            <span class="setting-name">Queda automática de energia</span>
+            <button class="toggle on" id="tog-queda" onclick="toggleSetting(this, 'queda')"></button>
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Queda por minuto (%)</span>
+            <input type="number" class="number-input" id="queda-rate" value="1" min="0" max="10">
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Energia mínima (%)</span>
+            <input type="number" class="number-input" id="min-energy" value="5" min="0" max="50">
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Energia ao ligar (%)</span>
+            <input type="number" class="number-input" id="start-energy" value="75" min="0" max="100">
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Segurança e Proteção</h3>
+          <div class="setting-row">
+            <span class="setting-name">Bloquear cor vermelha</span>
+            <button class="toggle on" id="tog-red" onclick="toggleBlockRed()"></button>
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Cor de segurança (quando bloqueado)</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:16px;height:16px;border-radius:50%;background:#39d353"></div>
+              <span style="font-size:12px;color:var(--muted)">Verde</span>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Operador sempre pode controlar</span>
+            <button class="toggle on" onclick="showToast('Sempre ativo por segurança')"></button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Ganho de Energia por Evento</h3>
+          <div class="setting-row">
+            <span class="setting-name">Ganho por botão físico (%)</span>
+            <input type="number" class="number-input" value="5" min="1" max="20">
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Ganho por sensor (%)</span>
+            <input type="number" class="number-input" value="3" min="1" max="20">
+          </div>
+          <div class="setting-row">
+            <span class="setting-name">Cooldown anti-repetição (s)</span>
+            <input type="number" class="number-input" value="30" min="1" max="300">
+          </div>
+          <div style="margin-top:12px">
+            <button class="ctrl-btn green" onclick="showToast('✅ Configurações salvas!')">💾 Salvar Configurações</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <div class="page" id="page-historico">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="ctrl-btn" onclick="showPage('dashboard')" style="padding:10px 18px;font-size:13px">← Voltar ao Dashboard</button>
+      </div>
+      <p class="section-title">📋 Histórico de Eventos</p>
+      <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>Data/Hora</th>
+              <th>Operador</th>
+              <th>Ação</th>
+              <th>Detalhes</th>
+              <th>Energia</th>
+            </tr>
+          </thead>
+          <tbody id="log-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<script>
+// =================== STATE ===================
+let state = {
+  energy: 75,
+  mode: 'energia',
+  frozen: false,
+  fixed100: false,
+  blockRed: true,
+  activeEffect: null,
+  effectInterval: null,
+  waveIndex: 0,
+  selectedPoles: new Set(),
+  currentPole: null,
+  logs: [],
+  poles: [
+    { id: 1, name: 'Poste 1', color: '#39d353', brightness: 100, locked: false, online: true, effect: null },
+    { id: 2, name: 'Poste 2', color: '#39d353', brightness: 100, locked: false, online: true, effect: null },
+    { id: 3, name: 'Poste 3', color: '#39d353', brightness: 100, locked: false, online: true, effect: null },
+    { id: 4, name: 'Poste 4', color: '#39d353', brightness: 100, locked: false, online: true, effect: null },
+  ]
+};
+
+// =================== INIT ===================
+function init() {
+  renderPolesGrid('poles-mini');
+  renderPolesGrid('poles-detail');
+  renderLogs();
+  updateEnergyUI();
+  updateAlerts();
+  startAutoDecay();
+}
+
+// =================== LOGIN ===================
+function doLogin() {
+  const u = document.getElementById('login-user').value;
+  const p = document.getElementById('login-pass').value;
+  if (u === 'jotaadm' && p === 'taua123') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-badge').textContent = '👤 ' + u;
+    addLog(u, 'Login', 'Operador entrou no sistema', state.energy);
+    init();
+  } else {
+    showToast('❌ Usuário ou senha incorretos');
+  }
+}
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function doLogout() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// =================== NAVIGATION ===================
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const tabs = ['dashboard','postes','show','regras','historico'];
+  const idx = tabs.indexOf(page);
+  document.querySelectorAll('.nav-tab')[idx]?.classList.add('active');
+  if (page === 'postes') renderPolesGrid('poles-detail');
+}
+
+// =================== ENERGY ===================
+function setEnergy(val) {
+  if (state.frozen) { showToast('❄️ Energia congelada! Descongele primeiro.'); return; }
+  const old = state.energy;
+  state.energy = Math.max(0, Math.min(100, val));
+  updateEnergyUI();
+  updatePolesColors();
+  if (val !== old) addLog('operador', 'Energia', `Energia ajustada de ${old}% para ${state.energy}%`, state.energy);
+}
+
+function addEnergy(delta) { setEnergy(state.energy + delta); }
+
+function toggleFix100() {
+  state.fixed100 = !state.fixed100;
+  const btn = document.getElementById('btn-fix100');
+  if (state.fixed100) {
+    state.frozen = true;
+    state.energy = 100;
+    btn.classList.add('active-btn');
+    btn.innerHTML = '<span class="qa-icon">🔓</span>Desfixar 100%';
+    document.getElementById('btn-freeze').classList.add('active-btn');
+    document.getElementById('btn-freeze').innerHTML = '<span class="qa-icon">❄️</span>Descongelar';
+    updateEnergyUI();
+    updatePolesColors();
+    updateAlerts();
+    showToast('🔋 Energia fixada em 100%!');
+    addLog('operador', 'Energia', 'Energia fixada em 100%', 100);
+  } else {
+    state.frozen = false;
+    btn.classList.remove('active-btn');
+    btn.innerHTML = '<span class="qa-icon">🔋</span>Fixar 100%';
+    document.getElementById('btn-freeze').classList.remove('active-btn');
+    document.getElementById('btn-freeze').innerHTML = '<span class="qa-icon">❄️</span>Congelar';
+    updateAlerts();
+    showToast('✅ Energia liberada!');
+    addLog('operador', 'Energia', 'Energia desfixada', state.energy);
+  }
+}
+
+function toggleFreeze() {
+  state.frozen = !state.frozen;
+  const btn = document.getElementById('btn-freeze');
+  if (state.frozen) {
+    btn.classList.add('active-btn');
+    btn.innerHTML = '<span class="qa-icon">❄️</span>Descongelar';
+    showToast('❄️ Energia congelada!');
+    addLog('operador', 'Energia', 'Energia congelada', state.energy);
+  } else {
+    btn.classList.remove('active-btn');
+    btn.innerHTML = '<span class="qa-icon">❄️</span>Congelar';
+    showToast('✅ Energia descongelada!');
+    addLog('operador', 'Energia', 'Energia descongelada', state.energy);
+  }
+  updateAlerts();
+}
+
+function toggleBlockRed() {
+  state.blockRed = !state.blockRed;
+  const btn = document.getElementById('btn-block-red');
+  const tog = document.getElementById('tog-red');
+  if (state.blockRed) {
+    btn?.classList.add('active-btn');
+    tog?.classList.add('on');
+    showToast('🛡️ Vermelho bloqueado!');
+    addLog('operador', 'Segurança', 'Bloqueio do vermelho ativado', state.energy);
+  } else {
+    btn?.classList.remove('active-btn');
+    tog?.classList.remove('on');
+    showToast('⚠️ Bloqueio do vermelho removido');
+    addLog('operador', 'Segurança', 'Bloqueio do vermelho desativado', state.energy);
+  }
+  updatePolesColors();
+  updateAlerts();
+}
+
+function toggleSetting(el, key) {
+  el.classList.toggle('on');
+}
+
+function getEnergyColor(pct) {
+  if (state.blockRed && pct <= 10) return '#39d353';
+  if (pct <= 10) return '#f04040';
+  if (pct <= 30) return '#f08040';
+  if (pct <= 60) return '#f0c040';
+  return '#39d353';
+}
+
+function updateEnergyUI() {
+  const pct = state.energy;
+  const color = getEnergyColor(pct);
+  document.getElementById('energy-display').textContent = pct + '%';
+  document.getElementById('energy-display').style.color = color;
+  document.getElementById('energy-bar').style.width = pct + '%';
+  document.getElementById('energy-bar').style.background = `linear-gradient(90deg, ${color}99, ${color})`;
+  document.getElementById('stat-energy').textContent = pct + '%';
+  if (pct === 100) {
+    document.getElementById('energy-display').classList.add('anim-celebrate');
+    setTimeout(() => document.getElementById('energy-display').classList.remove('anim-celebrate'), 3000);
+    activateEffect('festa');
+    showToast('🎉 Energia máxima! FESTA!');
+  }
+}
+
+function updateAlerts() {
+  const area = document.getElementById('alerts-area');
+  area.innerHTML = '';
+  if (state.frozen) area.innerHTML += `<div class="alert yellow">❄️ Energia congelada — os postes não mudam automaticamente.</div>`;
+  if (state.blockRed) area.innerHTML += `<div class="alert green">🛡️ Bloqueio do vermelho ativo — postes nunca ficarão vermelhos.</div>`;
+  if (state.energy <= 10 && !state.blockRed) area.innerHTML += `<div class="alert red">⚠️ Energia crítica! Os postes estão vermelhos.</div>`;
+}
+
+function startAutoDecay() {
+  setInterval(() => {
+    const tog = document.getElementById('tog-queda');
+    const rate = parseInt(document.getElementById('queda-rate')?.value || 1);
+    const minE = parseInt(document.getElementById('min-energy')?.value || 5);
+    if (tog?.classList.contains('on') && !state.frozen && state.mode === 'energia') {
+      if (state.energy > minE) {
+        state.energy = Math.max(minE, state.energy - rate);
+        updateEnergyUI();
+        updatePolesColors();
+        updateAlerts();
+        const onm = document.getElementById('stat-mode');
+        if (onm) onm.textContent = getModeLabel();
+      }
+    }
+  }, 60000);
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  const labels = { energia: 'ENERGIA', manual: 'MANUAL', show: 'SHOW' };
+  const el = document.getElementById('mode-badge');
+  if (el) el.textContent = labels[mode] || mode.toUpperCase();
+  document.getElementById('stat-mode').textContent = getModeLabel();
+  addLog('operador', 'Modo', 'Modo alterado para ' + getModeLabel(), state.energy);
+}
+
+function getModeLabel() {
+  return { energia: 'Energia', manual: 'Manual', show: 'Show' }[state.mode] || state.mode;
+}
+
+// =================== POLES ===================
+function renderPolesGrid(containerId) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const isDetail = containerId === 'poles-detail';
+  c.innerHTML = state.poles.map(p => `
+    <div class="pole-card${p.locked ? ' locked' : ''}${!p.online ? ' offline' : ''}${state.selectedPoles.has(p.id) ? ' selected' : ''}"
+         id="${containerId}-pole-${p.id}"
+         onclick="${isDetail ? `selectPole(${p.id})` : `showPage('postes'); selectPole(${p.id})`}">
+      <span class="pole-lock-icon">🔒</span>
+      <div class="pole-visual" style="background:${p.online ? p.color : '#333'};box-shadow:0 0 15px ${p.color}88"></div>
+      <div class="pole-name">${p.name}</div>
+      <div class="pole-status">${p.online ? '● Online' : '○ Offline'} · ${p.brightness}%</div>
+    </div>
+  `).join('');
+  document.getElementById('stat-online').textContent = state.poles.filter(p => p.online).length;
+  document.getElementById('stat-offline').textContent = state.poles.filter(p => !p.online).length;
+}
+
+function selectPole(id) {
+  const isDetail = document.getElementById('page-postes').classList.contains('active');
+  if (!isDetail) return;
+  const pole = state.poles.find(p => p.id === id);
+  if (!pole) return;
+  if (state.selectedPoles.has(id)) {
+    state.selectedPoles.delete(id);
+  } else {
+    state.selectedPoles.add(id);
+  }
+  state.currentPole = pole;
+  renderPolesGrid('poles-detail');
+  updateBatchBar();
+  showPolePanel(pole);
+}
+
+function selectAll() {
+  if (state.selectedPoles.size === state.poles.length) {
+    state.selectedPoles.clear();
+  } else {
+    state.poles.forEach(p => state.selectedPoles.add(p.id));
+  }
+  renderPolesGrid('poles-detail');
+  updateBatchBar();
+}
+
+function clearSelection() {
+  state.selectedPoles.clear();
+  renderPolesGrid('poles-detail');
+  updateBatchBar();
+  document.getElementById('pole-panel').classList.remove('active');
+}
+
+function updateBatchBar() {
+  const bar = document.getElementById('batch-bar');
+  const n = state.selectedPoles.size;
+  if (n > 1) {
+    bar.classList.add('active');
+    document.getElementById('batch-label').textContent = n + ' postes selecionados';
+  } else {
+    bar.classList.remove('active');
+  }
+}
+
+function showPolePanel(pole) {
+  const panel = document.getElementById('pole-panel');
+  const content = document.getElementById('pole-ctrl-content');
+  panel.classList.add('active');
+  content.innerHTML = `
+    <div class="ctrl-group">
+      <div class="ctrl-label">🎨 Cor do poste</div>
+      <div class="color-presets">
+        ${[['#39d353','🟢'],['#4090f0','🔵'],['#c060f0','🟣'],['#f0c040','🟡'],['#f04040','🔴'],['#ffffff','⚪'],['#f08040','🟠'],['#00e5ff','🩵']].map(([c,e])=>`
+          <div class="color-dot${pole.color===c?' selected':''}" style="background:${c}" title="${c}" onclick="setPoleColor(${pole.id},'${c}')"></div>
+        `).join('')}
+        <input type="color" value="${pole.color}" onchange="setPoleColor(${pole.id},this.value)" title="Cor personalizada">
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">💡 Brilho: <span id="bright-${pole.id}">${pole.brightness}%</span></div>
+      <input type="range" min="0" max="100" value="${pole.brightness}" oninput="setPoleValue(${pole.id},'brightness',this.value)">
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">⚙️ Ações</div>
+      <button class="ctrl-btn ${pole.locked?'red':'green'}" onclick="togglePoleLock(${pole.id})">${pole.locked?'🔓 Destravar':'🔒 Travar Cor'}</button>
+      <button class="ctrl-btn" onclick="togglePoleOnline(${pole.id})">${pole.online?'⬛ Desligar':'⬜ Ligar'}</button>
+      <button class="ctrl-btn" onclick="resetPole(${pole.id})">🔄 Resetar</button>
+    </div>
+  `;
+}
+
+function setPoleColor(id, color) {
+  const pole = state.poles.find(p => p.id === id);
+  if (!pole || pole.locked) { showToast('🔒 Poste travado!'); return; }
+  if (color === '#f04040' && state.blockRed) {
+    showToast('🛡️ Vermelho bloqueado! Use outra cor.');
+    return;
+  }
+  pole.color = color;
+  renderPolesGrid('poles-mini');
+  renderPolesGrid('poles-detail');
+  showPolePanel(pole);
+  addLog('operador', 'Cor', `${pole.name} → ${color}`, state.energy);
+  sendToHardware(id, { color });
+}
+
+function setPoleValue(id, key, val) {
+  const pole = state.poles.find(p => p.id === id);
+  if (pole) {
+    pole[key] = parseInt(val);
+    const el = document.getElementById(`bright-${id}`);
+    if (el) el.textContent = val + '%';
+    sendToHardware(id, { [key]: val });
+  }
+}
+
+function togglePoleLock(id) {
+  const pole = state.poles.find(p => p.id === id);
+  if (pole) {
+    pole.locked = !pole.locked;
+    renderPolesGrid('poles-mini');
+    renderPolesGrid('poles-detail');
+    showPolePanel(pole);
+    addLog('operador', 'Trava', `${pole.name} ${pole.locked?'travado':'destravado'}`, state.energy);
+    showToast(pole.locked ? '🔒 Poste travado!' : '🔓 Poste destravado!');
+  }
+}
+
+function togglePoleOnline(id) {
+  const pole = state.poles.find(p => p.id === id);
+  if (pole) {
+    pole.online = !pole.online;
+    renderPolesGrid('poles-mini');
+    renderPolesGrid('poles-detail');
+    showPolePanel(pole);
+    showToast(pole.online ? '✅ Poste ligado' : '⬛ Poste desligado');
+  }
+}
+
+function resetPole(id) {
+  const pole = state.poles.find(p => p.id === id);
+  if (pole) {
+    pole.color = getEnergyColor(state.energy);
+    pole.brightness = 100;
+    pole.locked = false;
+    renderPolesGrid('poles-mini');
+    renderPolesGrid('poles-detail');
+    showPolePanel(pole);
+    showToast('🔄 Poste resetado');
+  }
+}
+
+function batchColor(color) {
+  if (color === '#f04040' && state.blockRed) { showToast('🛡️ Vermelho bloqueado!'); return; }
+  state.selectedPoles.forEach(id => {
+    const pole = state.poles.find(p => p.id === id);
+    if (pole && !pole.locked) { pole.color = color; sendToHardware(id, { color }); }
+  });
+  renderPolesGrid('poles-mini');
+  renderPolesGrid('poles-detail');
+  addLog('operador', 'Cor', `${state.selectedPoles.size} postes → ${color}`, state.energy);
+  showToast(`✅ Cor aplicada a ${state.selectedPoles.size} postes`);
+}
+
+function allPolesColor(color) {
+  if (color === '#f04040' && state.blockRed) { showToast('🛡️ Vermelho bloqueado!'); return; }
+  state.poles.forEach(p => { if (!p.locked) { p.color = color; sendToHardware(p.id, { color }); } });
+  renderPolesGrid('poles-mini');
+  renderPolesGrid('poles-detail');
+  addLog('operador', 'Cor', `Todos os postes → ${color}`, state.energy);
+  showToast(`✅ Todos os postes: cor aplicada`);
+}
+
+function toggleAllPoles(on) {
+  state.poles.forEach(p => { p.online = on !== false; });
+  renderPolesGrid('poles-mini');
+  renderPolesGrid('poles-detail');
+  showToast(on === false ? '⬛ Todos desligados' : '✅ Todos ligados');
+}
+
+function updatePolesColors() {
+  if (state.mode !== 'energia' || state.activeEffect) return;
+  const color = getEnergyColor(state.energy);
+  state.poles.forEach(p => { if (!p.locked) p.color = color; });
+  renderPolesGrid('poles-mini');
+  renderPolesGrid('poles-detail');
+}
+
+// =================== EFFECTS ===================
+function activateEffect(name) {
+  stopEffect();
+  state.activeEffect = name;
+  setMode('show');
+  document.querySelectorAll('.effect-card').forEach(c => c.classList.remove('active'));
+  const card = document.getElementById('eff-' + name);
+  if (card) card.classList.add('active');
+  document.getElementById('active-effect-label').textContent = card ? card.querySelector('.effect-name').textContent : name;
+  addLog('operador', 'Show', 'Efeito ativado: ' + name, state.energy);
+
+  const poles = state.poles;
+  const colors = ['#f04040','#f08040','#f0c040','#39d353','#4090f0','#4040f0','#c060f0','#ff69b4'];
+
+  if (name === 'arcoiris') {
+    let i = 0;
+    state.effectInterval = setInterval(() => {
+      poles.forEach((p, idx) => {
+        p.color = colors[(idx + i) % colors.length];
+      });
+      i++;
+      renderPolesGrid('poles-mini');
+      renderPolesGrid('poles-detail');
+    }, 600);
+  } else if (name === 'onda') {
+    let i = 0;
+    state.effectInterval = setInterval(() => {
+      poles.forEach((p, idx) => {
+        p.color = idx === i % poles.length ? '#4090f0' : '#0a0a2a';
+      });
+      i++;
+      renderPolesGrid('poles-mini');
+      renderPolesGrid('poles-detail');
+    }, 400);
+  } else if (name === 'pulsacao') {
+    let on = true;
+    state.effectInterval = setInterval(() => {
+      poles.forEach(p => { p.color = on ? '#39d353' : '#0a2a0a'; });
+      on = !on;
+      renderPolesGrid('poles-mini');
+      renderPolesGrid('poles-detail');
+    }, 700);
+  } else if (name === 'alternancia') {
+    let phase = 0;
+    state.effectInterval = setInterval(() => {
+      poles.forEach((p, idx) => {
+        p.color = (idx % 2 === phase % 2) ? '#4090f0' : '#c060f0';
+      });
+      phase++;
+      renderPolesGrid('poles-mini');
+      renderPolesGrid('poles-detail');
+    }, 800);
+  } else if (name === 'perseguicao') {
+    let pos = 0;
+    state.effectInterval = setInterval(() => {
+      poles.forEach((p, idx) => {
+        const dist = Math.abs(idx - pos);
+        if (dist === 0) p.color = '#ffffff';
+        else if (dist === 1) p.color = '#4090f0';
+        else p.color = '#0a0a1a';
+      });
+      pos = (pos + 1) % poles.length;
+      renderPolesGrid('poles-mini');
+      renderPolesGrid('poles-detail');
+    }, 300);
+  } else if (name === 'contagem') {
+    const seq = ['#39d353','#f0c040','#f08040','#f04040'];
+    let s = 0;
+    state.effectInterval = setInterval(() => {
+      const c = seq[s % seq.length];
+      poles.forEach(p => p.color = c);
+      s++;
+      renderPolesGrid('poles-mini');
+      renderPolesGrid('poles-detail');
+    }, 1200);
+  } else if (name === 'festa') {
+    state.effectInterval = setInterval(() => {
+      poles.forEach(p => { p.color = colors[Math.floor(Math.random() * colors.length)]; });
+      renderPolesGrid('poles-mini');
+      renderPolesGrid('poles-detail');
+    }, 300);
+  } else if (name === 'noturno') {
+    poles.forEach(p => p.color = '#001a4d');
+    renderPolesGrid('poles-mini');
+    renderPolesGrid('poles-detail');
+  } else if (name === 'manutencao') {
+    let on = true;
+    state.effectInterval = setInterval(() => {
+      poles.forEach(p => p.color = on ? '#f0c040' : '#2a1a00');
+      on = !on;
+      renderPolesGrid('poles-mini');
+      renderPolesGrid('poles-detail');
+    }, 500);
+  }
+  showToast('🎆 Efeito ativado!');
+}
+
+function stopEffect() {
+  if (state.effectInterval) { clearInterval(state.effectInterval); state.effectInterval = null; }
+  state.activeEffect = null;
+  document.querySelectorAll('.effect-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('active-effect-label').textContent = 'nenhum';
+}
+
+// =================== LOGS ===================
+function addLog(user, type, detail, energy) {
+  const now = new Date();
+  state.logs.unshift({
+    time: now.toLocaleTimeString('pt-BR'),
+    date: now.toLocaleDateString('pt-BR'),
+    user, type, detail, energy
+  });
+  if (state.logs.length > 100) state.logs.pop();
+  renderLogs();
+}
+
+function renderLogs() {
+  const tb = document.getElementById('log-table-body');
+  if (!tb) return;
+  const typeClass = { 'Cor':'cor','Energia':'energia','Modo':'modo','Trava':'trava','Login':'modo','Segurança':'trava','Show':'modo' };
+  tb.innerHTML = state.logs.slice(0,50).map(l => `
+    <tr>
+      <td>${l.date} ${l.time}</td>
+      <td>${l.user}</td>
+      <td><span class="log-action ${typeClass[l.type]||'cor'}">${l.type}</span></td>
+      <td>${l.detail}</td>
+      <td>${l.energy}%</td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">Nenhum evento ainda</td></tr>';
+}
+
+// =================== CONFIGURAÇÃO DOS RASPBERRY PI ===================
+const RASPBERRY_IPS = {
+  1: 'http://100.69.187.24:5000',   // raspberrypi
+  2: 'http://100.86.192.123:5000',  // raspberrypi-1
+  3: 'http://100.76.76.102:5000',   // poste03
+  4: 'http://100.74.127.104:5000',  // atibaiaposte1
+};
+
+const COLOR_MAP = {
+  '#39d353': 'verde',
+  '#f04040': 'vermelho',
+  '#4090f0': 'azul',
+  '#f0c040': 'amarelo',
+  '#c060f0': 'rosa',
+  '#ffffff': 'branco',
+  '#00e5ff': 'ciano',
+  '#f08040': 'amarelo',
+  '#0a0a2a': 'desligado',
+  '#333':    'desligado',
+};
+
+function hexToNomeCor(hex) {
+  return COLOR_MAP[hex.toLowerCase()] || 'verde';
+}
+
+async function sendToHardware(poleId, cmd) {
+  const ip = RASPBERRY_IPS[poleId];
+  if (!ip || ip.includes('XXX')) {
+    console.log(`[Volt City] Poste ${poleId}: IP não configurado ainda.`);
+    return;
+  }
+  try {
+    if (cmd.color) {
+      const nomeCor = hexToNomeCor(cmd.color);
+      await fetch(`${ip}/cor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cor: nomeCor })
+      });
+      console.log(`[Volt City] Poste ${poleId} → cor: ${nomeCor}`);
+    }
+    if (cmd.nivel !== undefined) {
+      await fetch(`${ip}/nivel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nivel: cmd.nivel })
+      });
+      console.log(`[Volt City] Poste ${poleId} → nivel: ${cmd.nivel}%`);
+    }
+    if (cmd.efeito) {
+      await fetch(`${ip}/efeito`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ efeito: cmd.efeito })
+      });
+    }
+    if (cmd.travado !== undefined) {
+      await fetch(`${ip}/travar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ travado: cmd.travado })
+      });
+    }
+  } catch (e) {
+    console.warn(`[Volt City] Poste ${poleId}: sem conexão com Raspberry Pi (${ip})`);
+  }
+}
+
+async function sendToAllPoles(cmd) {
+  const ipsUnicos = [...new Set(Object.values(RASPBERRY_IPS))];
+  for (const ip of ipsUnicos) {
+    if (ip.includes('XXX')) continue;
+    try {
+      if (cmd.efeito) {
+        await fetch(`${ip}/efeito`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ efeito: cmd.efeito })
+        });
+      }
+      if (cmd.parar) {
+        await fetch(`${ip}/parar`, { method: 'POST' });
+      }
+      if (cmd.nivel !== undefined) {
+        await fetch(`${ip}/nivel`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nivel: cmd.nivel })
+        });
+      }
+    } catch (e) {
+      console.warn(`[Volt City] Sem conexão com ${ip}`);
+    }
+  }
+}
+
+// =================== TOAST ===================
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
