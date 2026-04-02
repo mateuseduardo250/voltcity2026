@@ -27,7 +27,11 @@ function activateEffect(name) {
   } else if (name === 'onda') {
     let i = 0;
     state.effectInterval = setInterval(() => {
-      poles.forEach((p, idx) => { p.color = idx === i % poles.length ? '#4090f0' : '#0a0a2a'; });
+      const idx = i % poles.length;
+      poles.forEach((p, pidx) => { p.color = pidx === idx ? '#4090f0' : '#0a0a2a'; });
+      Promise.allSettled(poles.map((p, pidx) =>
+        sendToHardware(p.id, { color: pidx === idx ? '#4090f0' : '#0a0a2a' })
+      ));
       i++;
       renderPolesGrid('poles-mini');
       renderPolesGrid('poles-detail');
@@ -53,10 +57,12 @@ function activateEffect(name) {
     state.effectInterval = setInterval(() => {
       poles.forEach((p, idx) => {
         const dist = Math.abs(idx - pos);
-        if (dist === 0) p.color = '#ffffff';
-        else if (dist === 1) p.color = '#4090f0';
-        else p.color = '#0a0a1a';
+        p.color = dist === 0 ? '#ffffff' : dist === 1 ? '#4090f0' : '#0a0a1a';
       });
+      Promise.allSettled(poles.map((p, idx) => {
+        const dist = Math.abs(idx - pos);
+        return sendToHardware(p.id, { color: dist === 0 ? '#ffffff' : dist === 1 ? '#4090f0' : '#0a0a1a' });
+      }));
       pos = (pos + 1) % poles.length;
       renderPolesGrid('poles-mini');
       renderPolesGrid('poles-detail');

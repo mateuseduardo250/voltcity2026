@@ -25,7 +25,7 @@ function hexToNomeCor(hex) {
 }
 
 // ---- Fetch com timeout + retry automático ----
-const REQUEST_TIMEOUT_MS = 3000;
+const REQUEST_TIMEOUT_MS = 8000;
 
 function fetchTimed(url, options) {
   const ctrl = new AbortController();
@@ -112,6 +112,14 @@ async function sendToAllPoles(cmd) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nivel: cmd.nivel })
+        });
+      }
+      if (cmd.color) {
+        const nomeCor = hexToNomeCor(cmd.color);
+        await fetchWithRetry(`${ip}/cor`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cor: nomeCor })
         });
       }
     } catch (e) {

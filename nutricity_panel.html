@@ -328,6 +328,17 @@
         </div>
       </div>
 
+      <!-- VU METER -->
+      <div style="background:linear-gradient(135deg,#0a1628,#0d2040);border:1px solid #2a4080;border-radius:14px;padding:16px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div>
+          <p style="font-weight:700;font-size:14px;margin:0 0 4px 0;">📊 VU Meter — Barras no Ritmo</p>
+          <p style="font-size:12px;color:var(--muted);margin:0;">As barras dos postes sobem e descem com o volume da música em tempo real.</p>
+        </div>
+        <button id="btn-vu-toggle" onclick="toggleVUMeter()" class="ctrl-btn" style="background:#1a3a6a;border:1px solid #2a4080;white-space:nowrap;flex-shrink:0;">
+          📊 Ativar VU Meter
+        </button>
+      </div>
+
       <!-- CARREGAR ARQUIVOS -->
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
         <p class="section-title" style="margin:0;">🎶 Playlist</p>
@@ -345,6 +356,67 @@
         <div style="text-align:center;padding:40px;color:var(--muted);font-size:14px;">
           Clique em <b>+ Adicionar Músicas</b> para carregar seus arquivos de áudio.<br>
           <span style="font-size:12px;opacity:.7;">Os nomes e BPMs ficam salvos automaticamente.</span>
+        </div>
+      </div>
+
+      <!-- MODO MICROFONE -->
+      <div style="margin-top:24px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <p style="font-weight:700;font-size:15px;margin:0;">🎤 Modo Microfone</p>
+          <span id="mic-status" style="font-size:12px;color:var(--muted);padding:3px 10px;border-radius:20px;background:var(--bg);">Inativo</span>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Coloca o celular perto da caixa de som. Os postes dançam no ritmo detectado pelo microfone.</p>
+
+        <button id="btn-mic-toggle" onclick="toggleMic()" class="ctrl-btn purple" style="width:100%;margin-bottom:16px;font-size:14px;">
+          🎤 Ativar Microfone
+        </button>
+
+        <!-- Nível de áudio + indicador de batida -->
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+            <span style="font-size:12px;color:var(--muted);">Nível de áudio</span>
+            <div id="mic-beat-dot" style="width:12px;height:12px;border-radius:50%;background:var(--border);transition:background .08s,box-shadow .08s;flex-shrink:0;"></div>
+            <span style="font-size:12px;color:var(--muted);">Batida</span>
+          </div>
+          <div style="height:10px;background:var(--bg);border-radius:5px;overflow:hidden;border:1px solid var(--border);">
+            <div id="mic-level-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#39d353,#f0c040,#f04040);transition:width .05s;border-radius:5px;"></div>
+          </div>
+        </div>
+
+        <!-- Seleção de frequência -->
+        <div style="margin-bottom:14px;">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">Frequência a capturar:</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="mic-band-grave" class="mic-band-btn active" onclick="setMicBand('grave')">🔊 Grave<br><span style="font-size:10px;opacity:.7;">Bumbo / Bass</span></button>
+            <button id="mic-band-medio" class="mic-band-btn" onclick="setMicBand('medio')">🎸 Médio<br><span style="font-size:10px;opacity:.7;">Voz / Guitarra</span></button>
+            <button id="mic-band-agudo" class="mic-band-btn" onclick="setMicBand('agudo')">🎵 Agudo<br><span style="font-size:10px;opacity:.7;">Chimbal / Pratos</span></button>
+            <button id="mic-band-todos" class="mic-band-btn" onclick="setMicBand('todos')">⚡ Todos<br><span style="font-size:10px;opacity:.7;">Qualquer som</span></button>
+          </div>
+        </div>
+
+        <!-- Estilo dos postes -->
+        <div style="margin-bottom:14px;">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">Estilo dos postes:</p>
+          <select onchange="setMicStyle(this.value)" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;">
+            <option value="flash">Flash — todos juntos</option>
+            <option value="sequencia">Sequência — um por um</option>
+            <option value="alternado">Alternado — par/ímpar</option>
+            <option value="arcoiris">Arco-íris</option>
+            <option value="carga">⚡ Carga Progressiva — barra sobe com a música</option>
+          </select>
+        </div>
+
+        <!-- Sensibilidade -->
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <p style="font-size:12px;color:var(--muted);margin:0;">Sensibilidade</p>
+            <span id="mic-sens-val" style="font-size:12px;color:var(--text);font-weight:600;">5</span>
+          </div>
+          <input type="range" min="1" max="10" value="5" style="width:100%;accent-color:var(--purple);"
+            oninput="setMicSensitivity(parseInt(this.value)); document.getElementById('mic-sens-val').textContent = this.value">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px;">
+            <span>← Menos sensível</span><span>Mais sensível →</span>
+          </div>
         </div>
       </div>
 

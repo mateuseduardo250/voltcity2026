@@ -338,3 +338,29 @@
     .stats-row { grid-template-columns: repeat(2, 1fr); }
     .quick-actions { grid-template-columns: repeat(3, 1fr); }
   }
+
+/* =================== MODO MICROFONE =================== */
+.mic-band-btn {
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.4;
+  transition: border-color .2s, color .2s, background .2s;
+  flex: 1;
+  min-width: 70px;
+}
+.mic-band-btn:hover {
+  border-color: var(--purple);
+  color: var(--purple);
+}
+.mic-band-btn.active {
+  border-color: var(--purple);
+  color: var(--purple);
+  background: rgba(160, 100, 240, 0.12);
+  font-weight: 600;
+}
