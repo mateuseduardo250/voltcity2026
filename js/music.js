@@ -401,13 +401,18 @@ function clearPlaylist() {
 // mandando o nível das barras dos postes para cima e para baixo com a batida.
 const vuState = {
   active:        false,
-  ctx:           null,   // AudioContext — motor de análise de áudio
-  analyser:      null,   // Analisa as frequências do áudio
-  source:        null,   // Fonte de áudio (o player de música)
-  frame:         null,   // Referência do loop de animação
-  currentNivel:  0,      // Nível atual (0–100)
-  lastSentNivel: -1,     // Último nível enviado aos postes
-  lastSendTime:  0,      // Controle de tempo para não sobrecarregar a rede
+  ctx:           null,
+  analyser:      null,
+  source:        null,
+  frame:         null,
+  currentNivel:  0,
+  lastSentNivel: -1,
+  lastSendTime:  0,
+  // Beat detection para flash de cor
+  energyHistory: new Array(30).fill(0),
+  lastBeat:      0,
+  beatCount:     0,
+  cooldown:      250,    // ms mínimo entre flashes de cor
 };
 
 function setupVUAnalyser() {
@@ -444,6 +449,9 @@ function startVUMeter() {
   vuState.active        = true;
   vuState.currentNivel  = 0;
   vuState.lastSentNivel = -1;
+  vuState.beatCount     = 0;
+  vuState.lastBeat      = 0;
+  vuState.energyHistory.fill(0);
 
   const dataArray = new Uint8Array(vuState.analyser.frequencyBinCount);
 
@@ -477,11 +485,26 @@ function startVUMeter() {
     const roundedNivel = Math.round(vuState.currentNivel / 5) * 5;
     const now = Date.now();
 
-    // Manda pro hardware no máximo a cada 120ms (evita sobrecarregar a rede)
+    // Manda nivel pro hardware no máximo a cada 120ms
     if (roundedNivel !== vuState.lastSentNivel && now - vuState.lastSendTime > 120) {
       sendToAllPoles({ nivel: roundedNivel });
       vuState.lastSentNivel = roundedNivel;
       vuState.lastSendTime  = now;
+    }
+
+    // Detecção de batida para flash de cor (VU + Flash)
+    vuState.energyHistory.shift();
+    vuState.energyHistory.push(energy);
+    const avg = vuState.energyHistory.reduce((a, b) => a + b, 0) / vuState.energyHistory.length;
+
+    if (energy > avg * 1.4 && energy > 20 && now - vuState.lastBeat > vuState.cooldown) {
+      vuState.lastBeat = now;
+      const cor = MUSIC_COLORS[vuState.beatCount % MUSIC_COLORS.length];
+      sendToAllPoles({ color: cor });
+      state.poles.forEach(p => { p.color = cor; });
+      renderPolesGrid('poles-mini');
+      renderPolesGrid('poles-detail');
+      vuState.beatCount++;
     }
   }
 
