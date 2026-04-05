@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 // =================== PARADA MUSICAL ===================
 const musicState = {
@@ -191,7 +191,9 @@ function musicPlay(idx) {
   audio.src = song.url;
   audio.play().catch(() => showToast('Erro ao reproduzir'));
 
-  startMusicBPM(song.bpm, song.style);
+  // Não inicia efeitos visuais automaticamente ao tocar música.
+  // A reação das luzes fica sob controle do VU Meter / modos explícitos.
+  stopMusicBPM();
   updatePlayerUI(song);
   renderPlaylist();
   addLog('operador', 'Música', 'Tocando: ' + song.name + ' (' + song.bpm + ' BPM)', state.energy);
@@ -205,6 +207,7 @@ function togglePlayPause() {
   if (musicState.playing) {
     audio.pause();
     musicState.playing = false;
+    if (vuState.active) stopVUMeter();
     stopMusicBPM();
     document.getElementById('btn-play-pause').textContent = '▶';
     document.getElementById('music-bpm-live').textContent = 'pausado';
@@ -212,13 +215,16 @@ function togglePlayPause() {
     audio.play();
     musicState.playing = true;
     const song = musicState.playlist[musicState.current];
-    startMusicBPM(song.bpm, song.style);
+    // Não inicia efeitos visuais automaticamente ao tocar música.
+  // A reação das luzes fica sob controle do VU Meter / modos explícitos.
+  stopMusicBPM();
     document.getElementById('btn-play-pause').textContent = '⏸';
   }
   renderPlaylist();
 }
 
 function musicStop() {
+  if (vuState.active) stopVUMeter();
   audio.pause();
   audio.currentTime = 0;
   musicState.playing = false;
@@ -367,7 +373,9 @@ function saveEditMusic() {
   saveMusicMeta();
   renderPlaylist();
   if (idx === musicState.current && musicState.playing) {
-    startMusicBPM(song.bpm, song.style);
+    // Não inicia efeitos visuais automaticamente ao tocar música.
+  // A reação das luzes fica sob controle do VU Meter / modos explícitos.
+  stopMusicBPM();
     updatePlayerUI(song);
   }
   showToast('✅ Música atualizada!');
@@ -432,11 +440,21 @@ function toggleVUMeter() {
   else startVUMeter();
 }
 
-function startVUMeter() {
+function applyVUNivel(nivel, syncHardware = true) {
+  const safeNivel = Math.max(0, Math.min(100, nivel));
+  state.poles.forEach(p => { p.brightness = safeNivel; });
+  renderPolesGrid('poles-mini');
+  renderPolesGrid('poles-detail');
+  if (syncHardware) sendToAllPoles({ nivel: safeNivel });
+}
+
+async function startVUMeter() {
   if (!musicState.playing) {
     showToast('⚠ Coloque uma música para tocar primeiro!');
     return;
   }
+  // Evita conflito com qualquer efeito de BPM automático.
+  stopMusicBPM();
   try {
     setupVUAnalyser();
   } catch(e) {
@@ -444,11 +462,21 @@ function startVUMeter() {
     return;
   }
   // Retoma o AudioContext se estava suspenso (política do navegador)
-  if (vuState.ctx.state === 'suspended') vuState.ctx.resume();
+  if (vuState.ctx.state === 'suspended') {
+    try {
+      await vuState.ctx.resume();
+    } catch (e) {
+      showToast('⚠ Não consegui ativar o áudio para o VU Meter');
+      return;
+    }
+  }
 
   vuState.active        = true;
   vuState.currentNivel  = 0;
   vuState.lastSentNivel = -1;
+  vuState.beatCount     = 0;
+  vuState.lastBeat      = 0;
+  vuState.energyHistory.fill(0);
   vuState.beatCount     = 0;
   vuState.lastBeat      = 0;
   vuState.energyHistory.fill(0);
@@ -521,6 +549,7 @@ function stopVUMeter() {
   vuState.frame         = null;
   vuState.currentNivel  = 0;
   vuState.lastSentNivel = -1;
+  applyVUNivel(0, true);
 
   const btn = document.getElementById('btn-vu-toggle');
   if (btn) { btn.textContent = '📊 Ativar VU Meter'; btn.style.background = ''; }
@@ -770,3 +799,11 @@ window.saveEditMusic     = saveEditMusic;
 window.closeEditMusic    = closeEditMusic;
 window.removeTrack       = removeTrack;
 window.clearPlaylist     = clearPlaylist;
+
+
+
+
+
+
+
+

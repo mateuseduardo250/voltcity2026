@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 // =================== POLES ===================
 function renderPolesGrid(containerId) {
@@ -103,16 +103,20 @@ function setPoleColor(id, color) {
 function setPoleValue(id, key, val) {
   const pole = state.poles.find(p => p.id === id);
   if (!pole) return;
-  pole[key] = parseInt(val);
+  const parsed = parseInt(val);
+  pole[key] = parsed;
   const el = document.getElementById(`bright-${id}`);
   if (el) el.textContent = val + '%';
-  sendToHardware(id, { [key]: val });
+  // O firmware usa "nivel" para brilho.
+  if (key === 'brightness') sendToHardware(id, { nivel: parsed });
+  else sendToHardware(id, { [key]: parsed });
 }
 
 function togglePoleLock(id) {
   const pole = state.poles.find(p => p.id === id);
   if (!pole) return;
   pole.locked = !pole.locked;
+  sendToHardware(id, { travado: pole.locked });
   renderPolesGrid('poles-mini');
   renderPolesGrid('poles-detail');
   showPolePanel(pole);
@@ -205,3 +209,5 @@ window.togglePoleOnline = togglePoleOnline;
 window.resetPole = resetPole;
 window.updateBatchBar = updateBatchBar;
 window.showPolePanel = showPolePanel;
+
+

@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 // =================== ENERGY ===================
 function setEnergy(val) {
@@ -130,8 +130,10 @@ function startAutoDecay() {
 }
 
 function setMode(mode) {
+  // Modo manual removido: mantém compatibilidade com botões antigos.
+  if (mode === 'manual') mode = 'energia';
   state.mode = mode;
-  const labels = { energia: 'ENERGIA', manual: 'MANUAL', show: 'SHOW' };
+  const labels = { energia: 'ENERGIA', show: 'SHOW' };
   const el = document.getElementById('mode-badge');
   if (el) el.textContent = labels[mode] || mode.toUpperCase();
   document.getElementById('stat-mode').textContent = getModeLabel();
@@ -139,7 +141,7 @@ function setMode(mode) {
 }
 
 function getModeLabel() {
-  return { energia: 'Energia', manual: 'Manual', show: 'Show' }[state.mode] || state.mode;
+  return { energia: 'Energia', show: 'Show' }[state.mode] || state.mode;
 }
 
 window.setEnergy = setEnergy;
@@ -154,3 +156,4 @@ window.updateAlerts = updateAlerts;
 window.startAutoDecay = startAutoDecay;
 window.setMode = setMode;
 window.getModeLabel = getModeLabel;
+
