@@ -239,6 +239,7 @@ function musicStop() {
   document.getElementById('music-time-total').textContent = '0:00';
   document.getElementById('music-bpm-live').textContent   = 'parado';
   renderPlaylist();
+  restorePolesFullGreen(true);
   showToast('⏹ Parado');
 }
 
@@ -448,6 +449,20 @@ function applyVUNivel(nivel, syncHardware = true) {
   if (syncHardware) sendToAllPoles({ nivel: safeNivel });
 }
 
+function restorePolesFullGreen(syncHardware = true) {
+  const fullColor = '#39d353';
+  state.poles.forEach(p => {
+    p.brightness = 100;
+    p.color = fullColor;
+  });
+  renderPolesGrid('poles-mini');
+  renderPolesGrid('poles-detail');
+  if (syncHardware) {
+    sendToAllPoles({ nivel: 100 });
+    sendToAllPoles({ color: fullColor });
+  }
+}
+
 async function startVUMeter() {
   if (!musicState.playing) {
     showToast('⚠ Coloque uma música para tocar primeiro!');
@@ -549,7 +564,7 @@ function stopVUMeter() {
   vuState.frame         = null;
   vuState.currentNivel  = 0;
   vuState.lastSentNivel = -1;
-  applyVUNivel(0, true);
+  applyVUNivel(100, true);  // Restaura barras 100% cheias ao desligar
 
   const btn = document.getElementById('btn-vu-toggle');
   if (btn) { btn.textContent = '📊 Ativar VU Meter'; btn.style.background = ''; }
@@ -751,59 +766,4 @@ function onMicBeat(energy) {
 function setMicBand(band) {
   micState.freqBand = band;
   document.querySelectorAll('.mic-band-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('mic-band-' + band);
-  if (btn) btn.classList.add('active');
-}
-
-function setMicStyle(style) {
-  micState.style = style;
-  // Zera nível ao trocar estilo
-  micState.currentNivel  = 0;
-  micState.lastSentNivel = -1;
-}
-
-function setMicSensitivity(val) {
-  micState.sensitivity = 1.9 - (val / 10) * 0.8;
-  micState.cooldown    = Math.round(500 - val * 35);
-}
-
-// Parar mic ao mudar de aba
-window.addEventListener('voltcity:pagechange', () => { if (micState.active) stopMic(); });
-
-// Parar música ao sair da aba
-const _origShowPage = window.showPage;
-if (_origShowPage) {
-  window.showPage = function(page) {
-    _origShowPage(page);
-  };
-}
-
-// Inicializa ao carregar
-document.addEventListener('DOMContentLoaded', loadMusicMeta);
-
-window.toggleVUMeter     = toggleVUMeter;
-window.stopVUMeter       = stopVUMeter;
-window.toggleMic         = toggleMic;
-window.stopMic           = stopMic;
-window.setMicBand        = setMicBand;
-window.setMicStyle       = setMicStyle;
-window.setMicSensitivity = setMicSensitivity;
-window.loadMusicFiles    = loadMusicFiles;
-window.musicPlay         = musicPlay;
-window.togglePlayPause   = togglePlayPause;
-window.musicStop         = musicStop;
-window.musicNext         = musicNext;
-window.musicPrev         = musicPrev;
-window.openEditMusic     = openEditMusic;
-window.saveEditMusic     = saveEditMusic;
-window.closeEditMusic    = closeEditMusic;
-window.removeTrack       = removeTrack;
-window.clearPlaylist     = clearPlaylist;
-
-
-
-
-
-
-
-
+  const btn = document.getElementById('mic

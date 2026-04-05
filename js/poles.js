@@ -192,6 +192,9 @@ function updatePolesColors() {
   state.poles.forEach(p => { if (!p.locked) p.color = color; });
   renderPolesGrid('poles-mini');
   renderPolesGrid('poles-detail');
+  // Mantém as barras sempre 100% cheias (exceto quando VU Meter está ativo)
+  const vuAtivo = typeof vuState !== 'undefined' && vuState.active;
+  if (!vuAtivo) sendToAllPoles({ nivel: 100 });
 }
 
 window.renderPolesGrid = renderPolesGrid;

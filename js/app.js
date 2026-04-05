@@ -17,6 +17,11 @@ function init() {
   updateEnergyUI();
   updateAlerts();
   startAutoDecay();
+  // Garante que as barras dos postes começam 100% cheias ao abrir o app
+  setTimeout(() => {
+    sendToAllPoles({ nivel: 100 });
+    state.poles.forEach(p => { p.brightness = 100; });
+  }, 2000);
 }
 
 window.init = init;
